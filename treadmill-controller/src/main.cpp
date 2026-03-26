@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <LiquidCrystal.h>
 
 /* Desired funtionality:
   - connect with the treadmill using the serialmonitor Communication pins are 18 (tx) and 19 (rx)
@@ -10,6 +11,8 @@
     - Speed Down
 
 */
+const int rs = 7, en = 6, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 byte start[] = { 0xAC, 0x01, 0x0B, 0x00, 0x00, 0xE0, 0x26 };
 byte stopcmd[] = { 0xAC, 0x01, 0x0C, 0x00, 0x00, 0x51, 0xE7 };
@@ -222,7 +225,11 @@ int UpButton = 10;
 int DownButton = 11;
 int index = 0;
 
+
+
 void setup() { // put your setup code here, to run once: 
+  lcd.begin(16,2); // Sizes of the lcd
+  lcd.print("hello world!");
   Serial.begin(9600); // Start de seriële verbinding op 9600 baud
   Serial1.begin(19200);
   pinMode(UpButton, INPUT);    // Up-button
@@ -232,11 +239,36 @@ void setup() { // put your setup code here, to run once:
 }
 
 void loop() {
-  if (digitalRead(UpButton) && index != 193)  {index += 1; Serial1.write(setspeed[index], sizeof(setspeed[index])); Serial.println(index);}
-  if (digitalRead(DownButton) && index != 0)  {index -= 1; Serial1.write(setspeed[index], sizeof(setspeed[index])); Serial.println(index);}
-  if (digitalRead(StartButton))               {Serial1.write(start, sizeof(start)); Serial.println("Start");}
-  if (digitalRead(StopButton))                {Serial1.write(stopcmd, sizeof(stopcmd)); Serial.println("Stop"); index = 0;}
-  delay(200);
+  if (digitalRead(UpButton) && index != 193)  { // Speed Up
+    index += 1;
+    Serial1.write(setspeed[index], sizeof(setspeed[index]));
+    Serial.println(index);
+    lcd.clear(); 
+    lcd.print("speed: ");
+    lcd.print(index);
+  }
+  if (digitalRead(DownButton) && index != 0)  { // Speed Down
+    index -= 1;
+    Serial1.write(setspeed[index], sizeof(setspeed[index]));
+    Serial.println(index);
+    lcd.clear();
+    lcd.print("speed: ");
+    lcd.print(index);
+  }
+  if (digitalRead(StartButton)) { // Start
+    Serial1.write(start, sizeof(start));
+    Serial.println("Start");
+    lcd.clear();
+    lcd.print("start");
+  }
+  if (digitalRead(StopButton)) { // Stop
+    Serial1.write(stopcmd, sizeof(stopcmd));
+    Serial.println("Stop");
+    index = 0;
+    lcd.clear();
+    lcd.print("stop");
+  }
+  delay(100);
 }
 
 
