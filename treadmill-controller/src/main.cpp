@@ -219,19 +219,16 @@ const byte setspeed[196][19] = {
 
 
 // TODO: Pin Assignments
-int StartButton = 8;
-int StopButton = 9;
-int UpButton = 10;
-int DownButton = 11;
+const int StartButton = 8, StopButton = 9, UpButton = 10, DownButton = 11;
 int index = 0;
-
+bool startBl = false;
 
 
 void setup() { // put your setup code here, to run once: 
   lcd.begin(16,2); // Sizes of the lcd
   lcd.print("hello world!");
   Serial.begin(9600); // Start de seriële verbinding op 9600 baud
-  Serial1.begin(19200);
+  // Serial1.begin(19200);
   pinMode(UpButton, INPUT);    // Up-button
   pinMode(DownButton, INPUT);  // Down-button
   pinMode(StartButton, INPUT); // Start-button
@@ -239,35 +236,39 @@ void setup() { // put your setup code here, to run once:
 }
 
 void loop() {
-  if (digitalRead(UpButton) && index != 193)  { // Speed Up
-    index += 1;
-    Serial1.write(setspeed[index], sizeof(setspeed[index]));
-    Serial.println(index);
-    lcd.clear(); 
-    lcd.print("speed: ");
-    lcd.print(index);
-  }
-  if (digitalRead(DownButton) && index != 0)  { // Speed Down
-    index -= 1;
-    Serial1.write(setspeed[index], sizeof(setspeed[index]));
-    Serial.println(index);
-    lcd.clear();
-    lcd.print("speed: ");
-    lcd.print(index);
-  }
-  if (digitalRead(StartButton)) { // Start
-    Serial1.write(start, sizeof(start));
-    Serial.println("Start");
-    lcd.clear();
-    lcd.print("start");
-  }
   if (digitalRead(StopButton)) { // Stop
-    Serial1.write(stopcmd, sizeof(stopcmd));
-    Serial.println("Stop");
     index = 0;
-    lcd.clear();
-    lcd.print("stop");
+    startBl = false;
+    /* Serial1.write(stopcmd, sizeof(stopcmd)); */
+    Serial.println("Stop"); 
   }
+  
+  if (digitalRead(StartButton)) { // Start
+    startBl = true;
+    /* Serial1.write(start, sizeof(start)); */
+    Serial.println("Start");
+  }
+
+  if (startBl) { // treadmill is running
+    if (digitalRead(UpButton) && index != 193)  { // Speed Up
+      index += 1;
+      // Serial1.write(setspeed[index], sizeof(setspeed[index]));
+      Serial.println(index);
+    }
+    if (digitalRead(DownButton) && index != 0)  { // Speed Down
+      index -= 1;
+      // Serial1.write(setspeed[index], sizeof(setspeed[index]));
+      Serial.println(index);
+    }
+  }
+
+  // print to screen
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(startBl? "Start" : "Stop");
+  lcd.setCursor(0,1);
+  lcd.print("Speed: ");
+  lcd.print(index);
   delay(100);
 }
 
