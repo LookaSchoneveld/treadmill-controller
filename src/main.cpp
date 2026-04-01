@@ -11,8 +11,14 @@
     - Speed Down
 
 */
-const int rs = 7, en = 6, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7, contrast = 13;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+// TODO: Pin Assignments
+const int StartButton = 2, StopButton = 3, UpButton = 12, DownButton = 11;
+int index = 0;
+bool startBl = false;
+
 
 byte start[] = { 0xAC, 0x01, 0x0B, 0x00, 0x00, 0xE0, 0x26 };
 byte stopcmd[] = { 0xAC, 0x01, 0x0C, 0x00, 0x00, 0x51, 0xE7 };
@@ -217,47 +223,44 @@ const byte setspeed[196][19] = {
   { 0xAC, 0x01, 0x09, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00, 0xC8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA9, 0x8D },
 };
 
-
-// TODO: Pin Assignments
-const int StartButton = 8, StopButton = 9, UpButton = 10, DownButton = 11;
-int index = 0;
-bool startBl = false;
-
-
 void setup() { // put your setup code here, to run once: 
+  pinMode(contrast, OUTPUT); analogWrite(contrast, 120); // Contrast pin from the LCD
+  pinMode(StartButton, INPUT_PULLUP);
+  pinMode(StopButton, INPUT_PULLUP);
+  pinMode(UpButton, INPUT_PULLUP);
+  pinMode(DownButton, INPUT_PULLUP);
+
   lcd.begin(16,2); // Sizes of the lcd
   lcd.print("hello world!");
   Serial.begin(9600); // Start de seriële verbinding op 9600 baud
-  // Serial1.begin(19200);
-  pinMode(UpButton, INPUT);    // Up-button
-  pinMode(DownButton, INPUT);  // Down-button
-  pinMode(StartButton, INPUT); // Start-button
-  pinMode(StopButton, INPUT);  // Stop-button
+  Serial1.begin(19200);
 }
 
 void loop() {
-  if (digitalRead(StopButton)) { // Stop
+  if (!digitalRead(StopButton)) { // Stop
     index = 0;
     startBl = false;
-    /* Serial1.write(stopcmd, sizeof(stopcmd)); */
+    Serial1.write(stopcmd, sizeof(stopcmd));
     Serial.println("Stop"); 
   }
   
-  if (digitalRead(StartButton)) { // Start
+  if (!digitalRead(StartButton)) { // Start
     startBl = true;
-    /* Serial1.write(start, sizeof(start)); */
+    Serial1.write(start, sizeof(start));
     Serial.println("Start");
   }
 
   if (startBl) { // treadmill is running
-    if (digitalRead(UpButton) && index != 193)  { // Speed Up
+    bool up = !digitalRead(UpButton);
+    bool down = !digitalRead(DownButton);
+    if (up && index != 193)  { // Speed Up
       index += 1;
-      // Serial1.write(setspeed[index], sizeof(setspeed[index]));
+      Serial1.write(setspeed[index], sizeof(setspeed[index]));
       Serial.println(index);
     }
-    if (digitalRead(DownButton) && index != 0)  { // Speed Down
+    if (down && index != 0)  { // Speed Down
       index -= 1;
-      // Serial1.write(setspeed[index], sizeof(setspeed[index]));
+      Serial1.write(setspeed[index], sizeof(setspeed[index]));
       Serial.println(index);
     }
   }
